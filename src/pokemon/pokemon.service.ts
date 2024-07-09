@@ -81,12 +81,10 @@ export class PokemonService {
     //await pokemon.deleteOne();
     //const result = await this.pokemonModel.findByIdAndDelete(id);
 
-    const { deletedCount } = await this.pokemonModel.deleteOne({_id:id});//this.pokemonModel.deleteMany es como delete * tpdp
-    if (deletedCount === 0) { 
-      throw new BadRequestException('id not found');
-    } else {
-     return;
-    }
+    const { deletedCount } = await this.pokemonModel.deleteOne({ _id: id });
+    if ( deletedCount === 0 )
+      throw new BadRequestException(`Pokemon with id "${ id }" not found`);
+    return;
 
   }
 
