@@ -1,17 +1,24 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, Query } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { Model, isValidObjectId } from 'mongoose';
 import { Pokemon } from './entities/pokemon.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+
 
 @Injectable()
 export class PokemonService {
 
+  private defaultLimit:number;
+
   constructor(
     @InjectModel(Pokemon.name)
-    private readonly pokemonModel:Model<Pokemon>){
+    private readonly pokemonModel:Model<Pokemon>,
+    private readonly configService: ConfigService){
+      this.defaultLimit = this.configService.get<number>('DEFAULT_LIMIT');
 
   }
   async create(createPokemonDto: CreatePokemonDto) {
@@ -27,18 +34,26 @@ export class PokemonService {
       } catch (error) {
         this.HandleExepction(error);
       }
-  
   }
 
-  async findAll() {
-    let pokemon:Pokemon
-    //pokemon = await this.pokemonModel.find()
-    return `This action returns all pokemon`;
+  async findAll( PaginationDto:PaginationDto) {
+    const { limit = this.defaultLimit, offset = 0 } = PaginationDto;
+
+    return this.pokemonModel.find()
+      .limit( limit )
+      .skip( offset )
+      .sort({
+        no: 1
+      })
+      .select('-__v');
   }
 
   async findOne(search: string) {
     let pokemon: Pokemon;
-    
+
+    if ( !isNaN(+search) ) {
+      pokemon = await this.pokemonModel.findOne({ no: search });
+    }
 
     // MongoID
     if ( !pokemon && isValidObjectId( search ) ) {
@@ -55,7 +70,7 @@ export class PokemonService {
       throw new NotFoundException(`Pokemon with id, name or no "${ search }" not found`);
     
 
-    return pokemon
+    return pokemon;
   }
 
   async update(term: string, updatePokemonDto: UpdatePokemonDto) {

@@ -11,6 +11,8 @@
 
 4. levantar BD docker-compose up -d
 
+5. recontruir base datos, ejecutar enpoint: http://localhost:3000/api/v2/seed
+
 ## Stack usado
 
 - MongoDB
